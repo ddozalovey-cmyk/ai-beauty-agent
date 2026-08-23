@@ -77,18 +77,9 @@ def rerank_videos_with_ai(videos, age_group, face_shape):
 # ==========================================
 @st.cache_resource
 def load_vision_detectors():
-    face_xml_url = "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml"
-    eye_xml_url = "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_eye.xml"
-    
-    for url, filename in [(face_xml_url, "haarcascade_frontalface_default.xml"), (eye_xml_url, "haarcascade_eye.xml")]:
-        if not os.path.exists(filename):
-            try:
-                urllib.request.urlretrieve(url, filename)
-            except Exception:
-                pass
-                
-    face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-    eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")
+    """OpenCV 내장 공식 haarcascades 경로에서 직접 로드 (클라우드 환경 100% 호환)"""
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
     return face_cascade, eye_cascade
 
 def analyze_face_advanced(image_bytes):
