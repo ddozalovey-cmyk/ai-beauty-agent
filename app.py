@@ -77,9 +77,24 @@ def rerank_videos_with_ai(videos, age_group, face_shape):
 # ==========================================
 
 def load_vision_detectors():
-    """OpenCV 내장 공식 haarcascades 경로에서 직접 로드 (클라우드 환경 100% 호환)"""
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+    """클라우드 리눅스 환경 호환용 자동 XML 다운로더 및 로더"""
+    face_xml = "haarcascade_frontalface_default.xml"
+    eye_xml = "haarcascade_eye.xml"
+    
+    # 리눅스 환경에서 cv2.data 누락 시를 대비해 공식 XML 직접 확보
+    if not os.path.exists(face_xml):
+        urllib.request.urlretrieve(
+            "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml",
+            face_xml
+        )
+    if not os.path.exists(eye_xml):
+        urllib.request.urlretrieve(
+            "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_eye.xml",
+            eye_xml
+        )
+        
+    face_cascade = cv2.CascadeClassifier(face_xml)
+    eye_cascade = cv2.CascadeClassifier(eye_xml)
     return face_cascade, eye_cascade
 
 def analyze_face_advanced(image_bytes):
