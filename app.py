@@ -99,7 +99,7 @@ TRANSLATIONS = {
 }
 
 # ==========================================
-# 1. 환경 설정 및 DB
+# 1. 환경 설정 및 DB 초기화
 # ==========================================
 st.set_page_config(page_title="AI Beauty Agent PRO", page_icon="💄", layout="centered")
 
@@ -162,7 +162,7 @@ def rerank_videos_with_ai(videos, age_group, face_shape):
     return scored_videos
 
 # ==========================================
-# 2. 비전 정밀 분석 로직
+# 2. 비전 정밀 분석 엔진
 # ==========================================
 def analyze_face_advanced(image_bytes, lang="ko"):
     t = TRANSLATIONS[lang]
@@ -217,7 +217,52 @@ def analyze_face_advanced(image_bytes, lang="ko"):
     }
 
 # ==========================================
-# 3. 유튜브 API
+# 3. 다차원 뷰티 전문 테크닉 매칭 엔진 (마법의 로직)
+# ==========================================
+def generate_universal_beauty_query(face_data, user_age, celeb_input, user_prompt, lang="ko"):
+    suffix = "메이크업" if lang == "ko" else "makeup tutorial"
+    
+    if not face_data:
+        celeb_part = f"{celeb_input} " if celeb_input else ""
+        return f"{user_age} {celeb_part}{user_prompt} {suffix}".strip(), f"{user_prompt} {suffix}"
+
+    techniques = []
+    
+    # 1. 얼굴형 분석 매핑
+    shape = face_data.get('face_shape', '')
+    if "둥근" in shape or "Round" in shape:
+        techniques.append("외곽 섀딩" if lang == "ko" else "jawline contour")
+    elif "긴" in shape or "Long" in shape:
+        techniques.append("가로 블러셔" if lang == "ko" else "horizontal blush")
+    else:
+        techniques.append("음영 입체감" if lang == "ko" else "soft glam")
+
+    # 2. 중안부 분석 매핑
+    mid = face_data.get('mid_desc', '')
+    if "긴" in mid or "Long" in mid:
+        techniques.append("애교살 오버립" if lang == "ko" else "aegyosal overlining")
+    elif "짧은" in mid or "Short" in mid:
+        techniques.append("콧대 하이라이터" if lang == "ko" else "bridge highlight")
+
+    # 3. 눈매 분석 매핑
+    eye = face_data.get('eye_tilt', '')
+    if "올라간" in eye or "Upward" in eye:
+        techniques.append("밑트임" if lang == "ko" else "puppy liner")
+    elif "처진" in eye or "Downward" in eye:
+        techniques.append("캣츠아이" if lang == "ko" else "cat eye lift")
+    else:
+        techniques.append("가로확장" if lang == "ko" else "horizontal eye")
+
+    celeb_part = f"{celeb_input} " if celeb_input else ""
+    tech_str = " ".join(techniques[:2])  # 검색 정확도를 위해 상위 2개 테크닉만 추출
+    
+    primary_query = f"{user_age} {celeb_part}{tech_str} {user_prompt} {suffix}".strip()
+    fallback_query = f"{tech_str} {user_prompt} {suffix}".strip()
+    
+    return primary_query, fallback_query
+
+# ==========================================
+# 4. 유튜브 API 모듈
 # ==========================================
 def fetch_youtube_raw(query, api_key, max_results=5):
     youtube = build("youtube", "v3", developerKey=api_key)
@@ -238,21 +283,21 @@ def fetch_youtube_raw(query, api_key, max_results=5):
             })
     return videos
 
-def search_youtube_videos(query, simple_query, api_key, max_results=5):
+def search_youtube_videos(query, fallback_query, api_key, max_results=5):
     if not api_key:
         st.error("🚨 YouTube API Key required in Settings > Secrets.")
         return []
     try:
         videos = fetch_youtube_raw(query, api_key, max_results)
-        if not videos and simple_query:
-            videos = fetch_youtube_raw(simple_query, api_key, max_results)
+        if not videos and fallback_query:
+            videos = fetch_youtube_raw(fallback_query, api_key, max_results)
         return videos
     except Exception as e:
         st.error(f"🚨 API Error: {e}")
         return []
 
 # ==========================================
-# 4. 프론트엔드 UI & 언어 처리
+# 5. 프론트엔드 UI & 채팅 처리
 # ==========================================
 selected_lang_label = st.sidebar.radio("🌐 Language / 언어", ["한국어", "English"], horizontal=True)
 lang_code = "ko" if selected_lang_label == "한국어" else "en"
@@ -296,7 +341,7 @@ if uploaded_file is not None:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 대화 및 영상 표시
+# 대화 및 영상 렌더링
 for idx, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -320,7 +365,7 @@ for idx, msg in enumerate(st.session_state.messages):
                                            msg.get("query", ""), -1)
                         st.toast(t["toast_down"], icon="🔧")
 
-# 사용자 질문 입력
+# 사용자 입력 처리
 if user_prompt := st.chat_input(t["chat_placeholder"]):
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
@@ -331,15 +376,12 @@ if user_prompt := st.chat_input(t["chat_placeholder"]):
             celeb_txt = celeb_input if celeb_input else t["default_style"]
             face_desc = f"{st.session_state.face_data['face_shape']}, {st.session_state.face_data['eye_tilt']}" if st.session_state.face_data else ("표준형" if lang_code == "ko" else "Standard")
             
-            # 검색 쿼리 구성 (영문/한글 자동 최적화)
-            celeb_part = f"{celeb_input} " if celeb_input else ""
-            face_part = f"{st.session_state.face_data['face_shape']} " if st.session_state.face_data else ""
-            suffix = "메이크업" if lang_code == "ko" else "makeup tutorial"
+            # 다차원 매칭 쿼리 생성
+            search_query, fallback_query = generate_universal_beauty_query(
+                st.session_state.face_data, user_age, celeb_input, user_prompt, lang_code
+            )
             
-            search_query = f"{user_age} {celeb_part}{face_part}{user_prompt} {suffix}".strip()
-            simple_query = f"{user_age} {user_prompt} {suffix}"
-            
-            raw_videos = search_youtube_videos(search_query, simple_query, YOUTUBE_API_KEY, max_results=5)
+            raw_videos = search_youtube_videos(search_query, fallback_query, YOUTUBE_API_KEY, max_results=5)
             current_face = st.session_state.face_data['face_shape'] if st.session_state.face_data else "General"
             ranked_videos = rerank_videos_with_ai(raw_videos, user_age, current_face)[:3]
             
