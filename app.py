@@ -9,9 +9,99 @@ from datetime import datetime
 from googleapiclient.discovery import build
 
 # ==========================================
-# 0. 환경 설정 및 SQLite 영구 DB 초기화
+# 0. 다국어 사전 (i18n Dictionary)
 # ==========================================
-st.set_page_config(page_title="AI 뷰티 에이전트 PRO", page_icon="💄", layout="centered")
+TRANSLATIONS = {
+    "ko": {
+        "title": "💄 AI 맞춤 뷰티 에이전트 PRO",
+        "caption": "비전 정밀 계측, 셀럽 메이크업 결합, 개인정보 100% 보호 메모리 처리 엔진 탑재",
+        "lang_select": "언어 선택 / Language",
+        "profile_header": "1. 사용자 프로필",
+        "age_label": "연령대 선택 (필수)",
+        "age_options": ["10대~20대 초반", "20대 후반~30대", "40대", "50대 이상"],
+        "celeb_label": "원하는 화장법의 연예인",
+        "celeb_placeholder": "예: 장원영, 아이유, 고현정",
+        "upload_header": "2. 정밀 진단용 셀카 업로드",
+        "privacy_notice": "🔒 **업로드하신 나의 사진은 외부 서버에 저장되지 않습니다.** (RAM 임시 분석 후 즉시 소멸)",
+        "file_uploader_label": "정면 민낯 사진 등록 (안심 업로드)",
+        "analysis_success": "✅ 얼굴 정밀 계측 완료",
+        "analysis_fail": "얼굴 감지에 실패했습니다. 밝은 조명의 정면 사진을 올려주세요.",
+        "delete_mem_btn": "🗑️ 사진 메모리 즉시 영구 삭제",
+        "face_shape_label": "얼굴형",
+        "split_ratio_label": "3분할",
+        "mid_face_label": "중안부",
+        "eye_tilt_label": "눈매",
+        "shape_oval": "균형 잡힌 계란형",
+        "shape_long": "세로로 긴 타원형",
+        "shape_round": "둥근 얼굴형",
+        "mid_long": "긴 중안부 (성숙미, 코 길이 축소 섀딩 권장)",
+        "mid_short": "짧은 중안부 (동안 비율, 하안부 리프팅 권장)",
+        "mid_balanced": "이상적인 황금 3분할 비율",
+        "eye_balanced": "자연스럽고 선명한 수평 눈매",
+        "chat_placeholder": "메이크업 고민이나 질문을 입력하세요 (예: 면접 메이크업, 눈썹 그리는 법)",
+        "spinner_msg": "맞춤 영상 및 피드백 데이터를 탐색 중입니다...",
+        "default_style": "자연스러운 데일리",
+        "solution_header": "회원님의",
+        "solution_for": "스타일에 맞춘 솔루션입니다.",
+        "face_sol_label": "페이스 분석 솔루션",
+        "face_sol_balance": "균형 있는 밸런스",
+        "rec_label": "추천 영상",
+        "rec_desc": "커뮤니티 만족도 평가를 반영한 최적의 튜토리얼입니다.",
+        "search_kw": "검색 키워드",
+        "btn_thumb_up": "👍 도움이 됐어요!",
+        "btn_thumb_down": "👎 별로예요",
+        "toast_up": "피드백이 DB에 저장되었습니다!",
+        "toast_down": "피드백이 반영되었습니다.",
+        "score_badge": "🔥 커뮤니티 추천점수"
+    },
+    "en": {
+        "title": "💄 AI Personal Beauty Agent PRO",
+        "caption": "Precision facial measurement, celeb style matching, 100% privacy-safe memory engine",
+        "lang_select": "Language / 언어 선택",
+        "profile_header": "1. User Profile",
+        "age_label": "Select Age Group (Required)",
+        "age_options": ["Teens to Early 20s", "Late 20s to 30s", "40s", "50s & Above"],
+        "celeb_label": "Celebrity Makeup Style Reference",
+        "celeb_placeholder": "e.g., Zendaya, Ariana Grande, Jennie",
+        "upload_header": "2. Diagnostic Selfie Upload",
+        "privacy_notice": "🔒 **Uploaded photos are never saved to external servers.** (Processed in volatile RAM only)",
+        "file_uploader_label": "Upload Front-facing Bare Face",
+        "analysis_success": "✅ Facial Measurement Completed",
+        "analysis_fail": "Failed to detect face. Please upload a clear front-facing photo.",
+        "delete_mem_btn": "🗑️ Instantly Purge Image Memory",
+        "face_shape_label": "Face Shape",
+        "split_ratio_label": "Proportions",
+        "mid_face_label": "Mid-face",
+        "eye_tilt_label": "Eye Tilt",
+        "shape_oval": "Balanced Oval",
+        "shape_long": "Long / Oblong",
+        "shape_round": "Round",
+        "mid_long": "Long Mid-face (Mature aesthetic, contouring advised)",
+        "mid_short": "Short Mid-face (Youthful ratio, lifting advised)",
+        "mid_balanced": "Ideal Golden Ratio Proportions",
+        "eye_balanced": "Balanced & Sharp Horizontal Eye Shape",
+        "chat_placeholder": "Ask your makeup question (e.g., interview makeup, natural brows)",
+        "spinner_msg": "Searching tailored videos and feedback logs...",
+        "default_style": "Natural Daily",
+        "solution_header": "Tailored solution for",
+        "solution_for": "style.",
+        "face_sol_label": "Facial Analysis Solution",
+        "face_sol_balance": "Balanced Facial Proportion",
+        "rec_label": "Recommended Videos",
+        "rec_desc": "Optimized tutorials ranked by community feedback.",
+        "search_kw": "Search Keyword",
+        "btn_thumb_up": "👍 Helpful!",
+        "btn_thumb_down": "👎 Not helpful",
+        "toast_up": "Feedback saved to database!",
+        "toast_down": "Feedback recorded.",
+        "score_badge": "🔥 Community Score"
+    }
+}
+
+# ==========================================
+# 1. 환경 설정 및 DB
+# ==========================================
+st.set_page_config(page_title="AI Beauty Agent PRO", page_icon="💄", layout="centered")
 
 try:
     if "YOUTUBE_API_KEY" in st.secrets:
@@ -72,9 +162,10 @@ def rerank_videos_with_ai(videos, age_group, face_shape):
     return scored_videos
 
 # ==========================================
-# 1. 비전 AI: 클라우드 100% 무오류 정밀 계측 엔진
+# 2. 비전 정밀 분석 로직
 # ==========================================
-def analyze_face_advanced(image_bytes):
+def analyze_face_advanced(image_bytes, lang="ko"):
+    t = TRANSLATIONS[lang]
     nparr = np.frombuffer(image_bytes, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if image is None:
@@ -82,11 +173,8 @@ def analyze_face_advanced(image_bytes):
         
     img_h, img_w = image.shape[:2]
     
-    # 얼굴 기본 검출 (중앙 기준 포커싱 및 마스크 계측)
-    x = int(img_w * 0.15)
-    y = int(img_h * 0.15)
-    w = int(img_w * 0.70)
     h = int(img_h * 0.70)
+    w = int(img_w * 0.70)
     
     upper_h = int(h * 0.33)
     mid_h = int(h * 0.34)
@@ -97,34 +185,39 @@ def analyze_face_advanced(image_bytes):
     mid_ratio = round((mid_h / total_h) * 100, 1)
     lower_ratio = round((lower_h / total_h) * 100, 1)
     
-    # 비율 기반 세부 진단
     if mid_ratio > 35.0:
-        mid_desc = "긴 중안부 (성숙미, 코 길이 축소 섀딩 권장)"
+        mid_desc = t["mid_long"]
     elif mid_ratio < 32.0:
-        mid_desc = "짧은 중안부 (동안 비율, 하안부 리프팅 권장)"
+        mid_desc = t["mid_short"]
     else:
-        mid_desc = "이상적인 황금 3분할 비율"
+        mid_desc = t["mid_balanced"]
         
     ratio = round(h / w, 2) if w > 0 else 1.0
     if ratio > 1.25:
-        face_shape = "세로로 긴 타원형"
+        face_shape = t["shape_long"]
     elif ratio < 1.05:
-        face_shape = "둥근 얼굴형"
+        face_shape = t["shape_round"]
     else:
-        face_shape = "균형 잡힌 계란형"
+        face_shape = t["shape_oval"]
 
-    eye_tilt_desc = "자연스럽고 선명한 수평 눈매"
+    eye_tilt_desc = t["eye_balanced"]
+    
+    ratio_split_text = (
+        f"상안부 {upper_ratio}% : 중안부 {mid_ratio}% : 하안부 {lower_ratio}%"
+        if lang == "ko"
+        else f"Upper {upper_ratio}% : Mid {mid_ratio}% : Lower {lower_ratio}%"
+    )
 
     return {
         "face_shape": face_shape,
         "ratio": ratio,
-        "ratio_split": f"상안부 {upper_ratio}% : 중안부 {mid_ratio}% : 하안부 {lower_ratio}%",
+        "ratio_split": ratio_split_text,
         "mid_desc": mid_desc,
         "eye_tilt": eye_tilt_desc
     }
 
 # ==========================================
-# 2. 유튜브 API 모듈 (결과 미출력 방지 Fallback 로직 탑재)
+# 3. 유튜브 API
 # ==========================================
 def fetch_youtube_raw(query, api_key, max_results=5):
     youtube = build("youtube", "v3", developerKey=api_key)
@@ -147,116 +240,128 @@ def fetch_youtube_raw(query, api_key, max_results=5):
 
 def search_youtube_videos(query, simple_query, api_key, max_results=5):
     if not api_key:
-        st.error("🚨 YouTube API Key를 찾을 수 없습니다. Settings > Secrets 설정을 확인해주세요.")
+        st.error("🚨 YouTube API Key required in Settings > Secrets.")
         return []
-    
     try:
         videos = fetch_youtube_raw(query, api_key, max_results)
         if not videos and simple_query:
             videos = fetch_youtube_raw(simple_query, api_key, max_results)
-        if not videos:
-            st.warning("⚠️ 해당 조건으로 검색된 YouTube 영상이 없습니다. 검색어를 조금 더 간단하게 입력해보세요.")
         return videos
     except Exception as e:
-        st.error(f"🚨 YouTube API 호출 오류: {e}")
+        st.error(f"🚨 API Error: {e}")
         return []
 
 # ==========================================
-# 3. 프론트엔드 UI
+# 4. 프론트엔드 UI & 언어 처리
 # ==========================================
-st.title("💄 AI 맞춤 뷰티 에이전트 PRO")
-st.caption("비전 정밀 계측, 셀럽 메이크업 결합, 개인정보 100% 보호 메모리 처리 엔진이 탑재되었습니다.")
+selected_lang_label = st.sidebar.radio("🌐 Language / 언어", ["한국어", "English"], horizontal=True)
+lang_code = "ko" if selected_lang_label == "한국어" else "en"
+t = TRANSLATIONS[lang_code]
 
-st.sidebar.header("1. 사용자 프로필")
-user_age = st.sidebar.selectbox("연령대 선택 (필수)", ["10대~20대 초반", "20대 후반~30대", "40대", "50대 이상"], index=2)
-celeb_input = st.sidebar.text_input("원하는 화장법의 연예인", placeholder="예: 장원영, 아이유, 고현정")
+st.title(t["title"])
+st.caption(t["caption"])
 
-st.sidebar.header("2. 정밀 진단용 셀카 업로드")
-st.sidebar.info("🔒 **업로드하신 나의 사진은 인터넷에 배포되거나 외부 서버에 저장되지 않습니다.** (RAM 임시 분석 후 즉시 소멸)")
+st.sidebar.header(t["profile_header"])
+user_age = st.sidebar.selectbox(t["age_label"], t["age_options"], index=1)
+celeb_input = st.sidebar.text_input(t["celeb_label"], placeholder=t["celeb_placeholder"])
 
-uploaded_file = st.sidebar.file_uploader("정면 민낯 사진 등록 (안심 업로드)", type=["jpg", "jpeg", "png"])
+st.sidebar.header(t["upload_header"])
+st.sidebar.info(t["privacy_notice"])
+
+uploaded_file = st.sidebar.file_uploader(t["file_uploader_label"], type=["jpg", "jpeg", "png"])
 
 if "face_data" not in st.session_state:
     st.session_state.face_data = None
 
 if uploaded_file is not None:
     image_bytes = uploaded_file.read()
-    features = analyze_face_advanced(image_bytes)
+    features = analyze_face_advanced(image_bytes, lang=lang_code)
     
     if features:
         st.session_state.face_data = features
         with st.sidebar:
-            st.success("✅ 얼굴 정밀 계측 완료")
-            st.write(f"• **얼굴형:** {features['face_shape']}")
-            st.write(f"• **3분할:** {features['ratio_split']}")
-            st.write(f"• **중안부:** {features['mid_desc']}")
-            st.write(f"• **눈매:** {features['eye_tilt']}")
+            st.success(t["analysis_success"])
+            st.write(f"• **{t['face_shape_label']}:** {features['face_shape']}")
+            st.write(f"• **{t['split_ratio_label']}:** {features['ratio_split']}")
+            st.write(f"• **{t['mid_face_label']}:** {features['mid_desc']}")
+            st.write(f"• **{t['eye_tilt_label']}:** {features['eye_tilt']}")
             
-            if st.button("🗑️ 사진 메모리 즉시 영구 삭제"):
+            if st.button(t["delete_mem_btn"]):
                 st.session_state.face_data = None
                 gc.collect()
                 st.rerun()
+    else:
+        st.sidebar.warning(t["analysis_fail"])
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 대화 기록 및 영상 렌더링
+# 대화 및 영상 표시
 for idx, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
         if "videos" in msg and msg["videos"]:
             for v_idx, v in enumerate(msg["videos"]):
-                score_badge = f" (🔥 커뮤니티 추천점수: +{v.get('community_score', 0)})" if v.get('community_score', 0) > 0 else ""
+                score_badge = f" ({t['score_badge']}: +{v.get('community_score', 0)})" if v.get('community_score', 0) > 0 else ""
                 st.write(f"**🎬 {v['title']}** ({v['channel']}){score_badge}")
                 st.video(f"https://www.youtube.com/watch?v={v['video_id']}")
                 
-                fb_col1, fb_col2, _ = st.columns([1.8, 2.2, 6])
+                fb_col1, fb_col2, _ = st.columns([2.5, 2.5, 5])
                 with fb_col1:
-                    if st.button("👍 도움이 됬어!", key=f"up_{idx}_{v_idx}"):
+                    if st.button(t["btn_thumb_up"], key=f"up_{idx}_{v_idx}"):
                         log_feedback_to_db(v['video_id'], v['title'], user_age, 
-                                           st.session_state.face_data['face_shape'] if st.session_state.face_data else "기본",
+                                           st.session_state.face_data['face_shape'] if st.session_state.face_data else "General",
                                            msg.get("query", ""), 1)
-                        st.toast("피드백이 DB에 저장되었습니다!", icon="💖")
+                        st.toast(t["toast_up"], icon="💖")
                 with fb_col2:
-                    if st.button("👎 도움이 안되는데!", key=f"down_{idx}_{v_idx}"):
+                    if st.button(t["btn_thumb_down"], key=f"down_{idx}_{v_idx}"):
                         log_feedback_to_db(v['video_id'], v['title'], user_age, 
-                                           st.session_state.face_data['face_shape'] if st.session_state.face_data else "기본",
+                                           st.session_state.face_data['face_shape'] if st.session_state.face_data else "General",
                                            msg.get("query", ""), -1)
-                        st.toast("피드백이 반영되었습니다.", icon="🔧")
+                        st.toast(t["toast_down"], icon="🔧")
 
-# 사용자 질문 입력창
-if user_prompt := st.chat_input("메이크업 고민이나 질문을 입력하세요 (예: 면접 메이크업, 눈썹 그리는 법)"):
+# 사용자 질문 입력
+if user_prompt := st.chat_input(t["chat_placeholder"]):
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
         st.markdown(user_prompt)
         
     with st.chat_message("assistant"):
-        with st.spinner("맞춤 영상 및 피드백 데이터를 탐색 중입니다..."):
-            celeb_txt = f"{celeb_input} 스타일" if celeb_input else "자연스러운 데일리"
-            face_desc = f"{st.session_state.face_data['face_shape']}, {st.session_state.face_data['eye_tilt']}" if st.session_state.face_data else "표준형"
+        with st.spinner(t["spinner_msg"]):
+            celeb_txt = celeb_input if celeb_input else t["default_style"]
+            face_desc = f"{st.session_state.face_data['face_shape']}, {st.session_state.face_data['eye_tilt']}" if st.session_state.face_data else ("표준형" if lang_code == "ko" else "Standard")
             
-            # 검색 쿼리 구성
+            # 검색 쿼리 구성 (영문/한글 자동 최적화)
             celeb_part = f"{celeb_input} " if celeb_input else ""
             face_part = f"{st.session_state.face_data['face_shape']} " if st.session_state.face_data else ""
-            search_query = f"{user_age} {celeb_part}{face_part}{user_prompt} 메이크업".strip()
-            simple_query = f"{user_age} {user_prompt} 메이크업"
+            suffix = "메이크업" if lang_code == "ko" else "makeup tutorial"
+            
+            search_query = f"{user_age} {celeb_part}{face_part}{user_prompt} {suffix}".strip()
+            simple_query = f"{user_age} {user_prompt} {suffix}"
             
             raw_videos = search_youtube_videos(search_query, simple_query, YOUTUBE_API_KEY, max_results=5)
-            current_face = st.session_state.face_data['face_shape'] if st.session_state.face_data else "기본"
+            current_face = st.session_state.face_data['face_shape'] if st.session_state.face_data else "General"
             ranked_videos = rerank_videos_with_ai(raw_videos, user_age, current_face)[:3]
             
-            guide = (
-                f"**{user_age}** 회원님의 **{face_desc}** 및 **[{celeb_txt}]**에 맞춘 솔루션입니다.\n\n"
-                f"• **페이스 분석 솔루션:** {st.session_state.face_data['mid_desc'] if st.session_state.face_data else '균형 있는 밸런스'}\n"
-                f"• **추천 영상:** 커뮤니티 만족도 평가를 반영한 최적의 튜토리얼입니다."
-            )
+            if lang_code == "ko":
+                guide = (
+                    f"**{user_age}** 회원님의 **{face_desc}** 및 **[{celeb_txt}]** 스타일에 맞춘 솔루션입니다.\n\n"
+                    f"• **{t['face_sol_label']}:** {st.session_state.face_data['mid_desc'] if st.session_state.face_data else t['face_sol_balance']}\n"
+                    f"• **{t['rec_label']}:** {t['rec_desc']}"
+                )
+            else:
+                guide = (
+                    f"{t['solution_header']} **{user_age}** with **{face_desc}** and **[{celeb_txt}]** {t['solution_for']}\n\n"
+                    f"• **{t['face_sol_label']}:** {st.session_state.face_data['mid_desc'] if st.session_state.face_data else t['face_sol_balance']}\n"
+                    f"• **{t['rec_label']}:** {t['rec_desc']}"
+                )
             
             st.markdown(guide)
-            st.caption(f"🔍 검색 키워드: `{search_query}`")
+            st.caption(f"🔍 {t['search_kw']}: `{search_query}`")
             
             if ranked_videos:
                 for v in ranked_videos:
-                    score_badge = f" (🔥 커뮤니티 추천점수: +{v.get('community_score', 0)})" if v.get('community_score', 0) > 0 else ""
+                    score_badge = f" ({t['score_badge']}: +{v.get('community_score', 0)})" if v.get('community_score', 0) > 0 else ""
                     st.write(f"**🎬 {v['title']}** ({v['channel']}){score_badge}")
                     st.video(f"https://www.youtube.com/watch?v={v['video_id']}")
             
