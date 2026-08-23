@@ -75,7 +75,7 @@ def rerank_videos_with_ai(videos, age_group, face_shape):
 # ==========================================
 # 1. 비전 AI: 3분할 및 눈매 정밀 계측 (보안 메모리 연산)
 # ==========================================
-@st.cache_resource
+
 def load_vision_detectors():
     """OpenCV 내장 공식 haarcascades 경로에서 직접 로드 (클라우드 환경 100% 호환)"""
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
