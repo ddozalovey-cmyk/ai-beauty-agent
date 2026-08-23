@@ -3,7 +3,7 @@
 OpenCV 기반 정밀 얼굴 계측(3분할 황금비, 눈매 각도)과 YouTube 공식 API를 결합한 맞춤형 메이크업 추천 AI 웹 애플리케이션입니다.
 
 ## 🌐 Live Web App (바로가기)
-👉 **[AI 뷰티 에이전트 웹 서비스 실행하기](https://여기에-본인의-streamlit-주소-입력.streamlit.app)**
+👉(https://my-custom-makeup.streamlit.app/)
 
 ---
 
