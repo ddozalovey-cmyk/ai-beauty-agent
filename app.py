@@ -52,7 +52,8 @@ TRANSLATIONS = {
         "btn_thumb_down": "👎 별로예요",
         "toast_up": "피드백이 DB에 저장되었습니다!",
         "toast_down": "피드백이 반영되었습니다.",
-        "score_badge": "🔥 커뮤니티 추천점수"
+        "score_badge": "🔥 커뮤니티 추천점수",
+        "disclaimer": "⚖️ **면책 조항 (Disclaimer):** 본 서비스에서 추천되는 모든 동영상의 저작권은 해당 YouTube 채널 크리에이터에게 있으며, Google YouTube Data API를 통해 공식 제공됩니다."
     },
     "en": {
         "title": "💄 AI Personal Beauty Agent PRO",
@@ -94,7 +95,8 @@ TRANSLATIONS = {
         "btn_thumb_down": "👎 Not helpful",
         "toast_up": "Feedback saved to database!",
         "toast_down": "Feedback recorded.",
-        "score_badge": "🔥 Community Score"
+        "score_badge": "🔥 Community Score",
+        "disclaimer": "⚖️ **Disclaimer:** All video copyrights belong to their respective YouTube creators. Videos are embedded and curated officially via the Google YouTube Data API."
     }
 }
 
@@ -217,7 +219,7 @@ def analyze_face_advanced(image_bytes, lang="ko"):
     }
 
 # ==========================================
-# 3. 다차원 뷰티 전문 테크닉 매칭 엔진 (마법의 로직)
+# 3. 다차원 뷰티 전문 테크닉 매칭 엔진
 # ==========================================
 def generate_universal_beauty_query(face_data, user_age, celeb_input, user_prompt, lang="ko"):
     suffix = "메이크업" if lang == "ko" else "makeup tutorial"
@@ -227,8 +229,6 @@ def generate_universal_beauty_query(face_data, user_age, celeb_input, user_promp
         return f"{user_age} {celeb_part}{user_prompt} {suffix}".strip(), f"{user_prompt} {suffix}"
 
     techniques = []
-    
-    # 1. 얼굴형 분석 매핑
     shape = face_data.get('face_shape', '')
     if "둥근" in shape or "Round" in shape:
         techniques.append("외곽 섀딩" if lang == "ko" else "jawline contour")
@@ -237,14 +237,12 @@ def generate_universal_beauty_query(face_data, user_age, celeb_input, user_promp
     else:
         techniques.append("음영 입체감" if lang == "ko" else "soft glam")
 
-    # 2. 중안부 분석 매핑
     mid = face_data.get('mid_desc', '')
     if "긴" in mid or "Long" in mid:
         techniques.append("애교살 오버립" if lang == "ko" else "aegyosal overlining")
     elif "짧은" in mid or "Short" in mid:
         techniques.append("콧대 하이라이터" if lang == "ko" else "bridge highlight")
 
-    # 3. 눈매 분석 매핑
     eye = face_data.get('eye_tilt', '')
     if "올라간" in eye or "Upward" in eye:
         techniques.append("밑트임" if lang == "ko" else "puppy liner")
@@ -254,7 +252,7 @@ def generate_universal_beauty_query(face_data, user_age, celeb_input, user_promp
         techniques.append("가로확장" if lang == "ko" else "horizontal eye")
 
     celeb_part = f"{celeb_input} " if celeb_input else ""
-    tech_str = " ".join(techniques[:2])  # 검색 정확도를 위해 상위 2개 테크닉만 추출
+    tech_str = " ".join(techniques[:2])
     
     primary_query = f"{user_age} {celeb_part}{tech_str} {user_prompt} {suffix}".strip()
     fallback_query = f"{tech_str} {user_prompt} {suffix}".strip()
@@ -341,7 +339,6 @@ if uploaded_file is not None:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 대화 및 영상 렌더링
 for idx, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -365,7 +362,6 @@ for idx, msg in enumerate(st.session_state.messages):
                                            msg.get("query", ""), -1)
                         st.toast(t["toast_down"], icon="🔧")
 
-# 사용자 입력 처리
 if user_prompt := st.chat_input(t["chat_placeholder"]):
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
@@ -376,7 +372,6 @@ if user_prompt := st.chat_input(t["chat_placeholder"]):
             celeb_txt = celeb_input if celeb_input else t["default_style"]
             face_desc = f"{st.session_state.face_data['face_shape']}, {st.session_state.face_data['eye_tilt']}" if st.session_state.face_data else ("표준형" if lang_code == "ko" else "Standard")
             
-            # 다차원 매칭 쿼리 생성
             search_query, fallback_query = generate_universal_beauty_query(
                 st.session_state.face_data, user_age, celeb_input, user_prompt, lang_code
             )
@@ -414,3 +409,9 @@ if user_prompt := st.chat_input(t["chat_placeholder"]):
                 "videos": ranked_videos
             })
             st.rerun()
+
+# ==========================================
+# 6. 법적 면책 조항 (Legal Disclaimer Footer)
+# ==========================================
+st.write("---")
+st.caption(t["disclaimer"])
