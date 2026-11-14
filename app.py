@@ -416,15 +416,17 @@ if user_prompt := st.chat_input(t["chat_placeholder"]):
 st.write("---")
 st.caption(t["disclaimer"])
 # ==========================================
-# [추가 기능] K-뷰티 명품 듀프(Dupe) 숏폼 추천 섹션
+# [개선 기능] K-뷰티 명품 듀프(Dupe) 무제한 숏폼 추천 섹션
 # ==========================================
 st.markdown("---")
-st.subheader("💎 하이엔드 명품 vs K-뷰티 가성비 듀프(Dupe) 숏폼")
-st.caption("비싼 백화점 명품 화장품과 발색·제형이 유사한 인기 한국 화장품 비교 쇼츠를 확인해 보세요.")
+st.subheader("💎 하이엔드 럭셔리 vs K-뷰티 가성비 듀프(Dupe) 숏폼")
+st.caption("백화점 하이엔드 화장품과 발색·제형이 유사한 인기 한국 화장품 비교 쇼츠를 자유롭게 탐색해 보세요.")
 
 @st.cache_data(ttl=86400)
 def search_kbeauty_dupes(api_key, query, max_results=4):
     youtube = build("youtube", "v3", developerKey=api_key)
+    
+    # 1차 시도: 60초 이하 쇼츠(Shorts) 우선 검색
     request = youtube.search().list(
         part="snippet",
         q=query,
@@ -434,27 +436,64 @@ def search_kbeauty_dupes(api_key, query, max_results=4):
         maxResults=max_results
     )
     response = request.execute()
-    return response.get("items", [])
+    items = response.get("items", [])
+    
+    # 2차 방어(Fallback): 쇼츠 결과가 0개일 경우 길이 제한 없이 인기 비교 영상 검색
+    if not items:
+        fallback_request = youtube.search().list(
+            part="snippet",
+            q=query,
+            type="video",
+            order="relevance",
+            maxResults=max_results
+        )
+        fallback_response = fallback_request.execute()
+        items = fallback_response.get("items", [])
+        
+    return items
 
+# 1. 확장된 기본 추천 카테고리 (상표권 리스크 없는 안전한 표현)
 category_map = {
-    "💋 립 (백화점 하이엔드 럭셔리 립 듀프)": "K-beauty luxury lip dupes shorts 롬앤 페리페라 명품 저렴이",
-    "✨ 쿠션 & 파운데이션 (하이엔드 베이스 메이크업 듀프)": "K-beauty cushion foundation dupes shorts 명품 파데 저렴이 쿠션",
-    "🎨 아이섀도우 & 블러셔 (프리미엄 백화점 색조 듀프)": "K-beauty eyeshadow blush dupes shorts 명품 섀도우 블러셔 저렴이",
-    "🌿 스킨케어 & 프라이머 (럭셔리 스킨케어·베이스 듀프)": "K-beauty skincare primer dupes shorts 올리브영 명품 저렴이"
+    "✍️ 직접 원하는 제품/스타일 입력하기": "",
+    "💋 립 메이크업 (백화점 하이엔드 립 듀프)": "K-beauty lip dupes shorts 립 명품 저렴이",
+    "✨ 쿠션 & 파운데이션 (하이엔드 베이스 듀프)": "K-beauty cushion foundation dupes 쿠션 파데 명품 저렴이",
+    "🎨 아이섀도우 & 블러셔 (프리미엄 색조 듀프)": "K-beauty blush eyeshadow dupes 블러셔 섀도우 명품 저렴이",
+    "👁️ 아이라이너 & 마스카라 (지속력 갑 K-뷰티 듀프)": "K-beauty eyeliner mascara dupes 아이라이너 마스카라 추천",
+    "🪄 컨실러 & 쉐딩 (입체 윤곽 K-뷰티 듀프)": "K-beauty contour concealer dupes 컨실러 쉐딩 명품 저렴이",
+    "🌿 스킨케어 & 프라이머 (럭셔리 스킨케어 듀프)": "K-beauty skincare primer dupes 올리브영 명품 저렴이"
 }
-selected_cat = st.selectbox("관심 있는 화장품 카테고리를 선택하세요:", list(category_map.keys()))
 
-if st.button("🔍 듀프 숏폼 영상 불러오기", type="primary"):
+col_cat, col_custom = st.columns([1, 1])
+
+with col_cat:
+    selected_cat = st.selectbox("1️⃣ 카테고리 선택:", list(category_map.keys()))
+
+with col_custom:
+    custom_keyword = st.text_input(
+        "2️⃣ 추가 세부 키워드 (선택 사항):",
+        placeholder="예: 쿨톤 립, 수부지 쿠션, 글로우 블러셔..."
+    )
+
+if st.button("🔍 맞춤 듀프 영상 불러오기", type="primary"):
     try:
-        # ⚠️ 주의: 기존 app.py에서 사용 중인 API 키 변수명과 동일하게 맞춰주세요.
         api_key = st.secrets["YOUTUBE_API_KEY"]
-        search_query = category_map[selected_cat]
+        base_query = category_map[selected_cat]
+        
+        # 사용자 직접 입력과 카테고리 조합
+        if custom_keyword.strip():
+            if base_query:
+                search_query = f"{custom_keyword.strip()} {base_query}"
+            else:
+                search_query = f"{custom_keyword.strip()} K-beauty dupes 명품 저렴이"
+        else:
+            # 직접 입력을 선택하고 아무것도 안 적었을 경우 기본 인기 쿼리 적용
+            search_query = base_query if base_query else "K-beauty luxury dupes shorts 명품 저렴이 화장품"
 
-        with st.spinner("인기 K-뷰티 듀프 숏폼을 큐레이션 중입니다..."):
+        with st.spinner(f"'{custom_keyword if custom_keyword.strip() else selected_cat}' 관련 인기 K-뷰티 영상을 찾는 중..."):
             videos = search_kbeauty_dupes(api_key, search_query, max_results=4)
 
         if not videos:
-            st.warning("검색된 영상이 없습니다. 다른 카테고리를 선택해 보세요.")
+            st.warning("일치하는 영상이 없습니다. 조금 더 간단한 단어(예: 립틴트, 쿠션)로 다시 검색해 보세요.")
         else:
             cols = st.columns(2)
             for idx, item in enumerate(videos):
