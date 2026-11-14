@@ -419,6 +419,17 @@ st.caption(t["disclaimer"])
 # [개선 기능] K-뷰티 명품 듀프(Dupe) 무제한 숏폼 추천 섹션
 # ==========================================
 st.markdown("---")
+# 기존 app.py 상단의 언어 선택 변수명(예: lang)과 연결
+is_en = (lang == "English") if "lang" in locals() else False
+
+if is_en:
+    st.subheader("💎 High-End Luxury vs. K-Beauty Affordable Dupes (Shorts)")
+    st.caption(
+        "Explore popular K-Beauty comparison Shorts featuring shades and textures similar to high-end luxury cosmetics. "
+        "Search trending K-Beauty dupe Shorts right away—no photo upload required! "
+        "Want makeup tips tailored to your exact facial proportions? Start your precision diagnosis in the left sidebar."
+    )
+else:
 st.subheader("💎 하이엔드 럭셔리 vs K-뷰티 가성비 듀프(Dupe) 숏폼")
 st.caption("백화점 하이엔드 화장품과 발색·제형이 유사한 인기 한국 화장품 비교 쇼츠를 자유롭게 탐색해 보세요.사진 업로드 없이 바로 인기 K-뷰티 듀프 숏폼을 검색해 보세요! 내 얼굴 비율에 딱 맞는 화장법이 궁금하다면 왼쪽 메뉴에서 정밀 진단을 시작할 수 있습니다")
 
