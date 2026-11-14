@@ -543,6 +543,8 @@ if st.button(btn_txt, type="primary"):
         if not videos:
             st.warning(warn_txt)
         else:
+            if is_en:
+                st.caption("💡 **Subtitle Tip:** Click **'CC' → ⚙️ Settings → Subtitles → Auto-translate → English** on the player, or tap the video title to watch with English subtitles on YouTube.")
             cols = st.columns(2)
             for idx, item in enumerate(videos):
                 video_id = item["id"]["videoId"]
