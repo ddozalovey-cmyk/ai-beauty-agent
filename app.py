@@ -420,7 +420,7 @@ st.caption(t["disclaimer"])
 # ==========================================
 st.markdown("---")
 # 기존 app.py 상단의 언어 선택 변수명(예: lang)과 연결
-is_en = (lang == "English") if "lang" in locals() else False
+is_en = "Disclaimer" in t.get("disclaimer", "") or "is not" in t.get("disclaimer", "") or not any("가" <= c <= "힣" for c in t.get("disclaimer", ""))
 
 if is_en:
     st.subheader("💎 High-End Luxury vs. K-Beauty Affordable Dupes (Shorts)")
