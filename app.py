@@ -415,3 +415,66 @@ if user_prompt := st.chat_input(t["chat_placeholder"]):
 # ==========================================
 st.write("---")
 st.caption(t["disclaimer"])
+# ==========================================
+# [추가 기능] K-뷰티 명품 듀프(Dupe) 숏폼 추천 섹션
+# ==========================================
+st.markdown("---")
+st.subheader("💎 하이엔드 명품 vs K-뷰티 가성비 듀프(Dupe) 숏폼")
+st.caption("비싼 백화점 명품 화장품과 발색·제형이 유사한 인기 한국 화장품 비교 쇼츠를 확인해 보세요.")
+
+@st.cache_data(ttl=86400)
+def search_kbeauty_dupes(api_key, query, max_results=4):
+    youtube = build("youtube", "v3", developerKey=api_key)
+    request = youtube.search().list(
+        part="snippet",
+        q=query,
+        type="video",
+        videoDuration="short",
+        order="relevance",
+        maxResults=max_results
+    )
+    response = request.execute()
+    return response.get("items", [])
+
+category_map = {
+    "💋 립 (디올·입생로랑·샤넬 듀프)": "K-beauty luxury lip dupes shorts 롬앤 페리페라 명품 저렴이",
+    "✨ 쿠션 & 파운데이션 (아르마니·입생로랑 듀프)": "K-beauty cushion foundation dupes shorts 명품 파데 저렴이 쿠션",
+    "🎨 아이섀도우 & 블러셔 (나스·톰포드·디올 듀프)": "K-beauty eyeshadow blush dupes shorts 명품 섀도우 블러셔 저렴이",
+    "🌿 스킨케어 & 프라이머 (에스티로더·바비브라운 듀프)": "K-beauty skincare primer dupes shorts 올리브영 명품 저렴이"
+}
+
+selected_cat = st.selectbox("관심 있는 화장품 카테고리를 선택하세요:", list(category_map.keys()))
+
+if st.button("🔍 듀프 숏폼 영상 불러오기", type="primary"):
+    try:
+        # ⚠️ 주의: 기존 app.py에서 사용 중인 API 키 변수명과 동일하게 맞춰주세요.
+        api_key = st.secrets["YOUTUBE_API_KEY"]
+        search_query = category_map[selected_cat]
+
+        with st.spinner("인기 K-뷰티 듀프 숏폼을 큐레이션 중입니다..."):
+            videos = search_kbeauty_dupes(api_key, search_query, max_results=4)
+
+        if not videos:
+            st.warning("검색된 영상이 없습니다. 다른 카테고리를 선택해 보세요.")
+        else:
+            cols = st.columns(2)
+            for idx, item in enumerate(videos):
+                video_id = item["id"]["videoId"]
+                title = item["snippet"]["title"]
+                channel = item["snippet"]["channelTitle"]
+                video_url = f"https://www.youtube.com/watch?v={video_id}"
+
+                with cols[idx % 2]:
+                    st.video(video_url)
+                    st.markdown(f"**{title}**")
+                    st.caption(f"📺 크리에이터: {channel}")
+                    st.markdown("---")
+
+            st.info(
+                "ℹ️ **안내:** 모든 동영상의 저작권은 해당 YouTube 크리에이터에게 있으며, "
+                "Google YouTube Data API를 통해 공식 임베드 제공됩니다. "
+                "특정 브랜드와의 공식 제휴나 비방 목적이 아닌 뷰티 트렌드 큐레이션 정보입니다."
+            )
+
+    except Exception as e:
+        st.error("일일 무료 API 할당량이 소진되었거나 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
