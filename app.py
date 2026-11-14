@@ -437,12 +437,11 @@ def search_kbeauty_dupes(api_key, query, max_results=4):
     return response.get("items", [])
 
 category_map = {
-    "💋 립 (디올·입생로랑·샤넬 듀프)": "K-beauty luxury lip dupes shorts 롬앤 페리페라 명품 저렴이",
-    "✨ 쿠션 & 파운데이션 (아르마니·입생로랑 듀프)": "K-beauty cushion foundation dupes shorts 명품 파데 저렴이 쿠션",
-    "🎨 아이섀도우 & 블러셔 (나스·톰포드·디올 듀프)": "K-beauty eyeshadow blush dupes shorts 명품 섀도우 블러셔 저렴이",
-    "🌿 스킨케어 & 프라이머 (에스티로더·바비브라운 듀프)": "K-beauty skincare primer dupes shorts 올리브영 명품 저렴이"
+    "💋 립 (백화점 하이엔드 럭셔리 립 듀프)": "K-beauty luxury lip dupes shorts 롬앤 페리페라 명품 저렴이",
+    "✨ 쿠션 & 파운데이션 (하이엔드 베이스 메이크업 듀프)": "K-beauty cushion foundation dupes shorts 명품 파데 저렴이 쿠션",
+    "🎨 아이섀도우 & 블러셔 (프리미엄 백화점 색조 듀프)": "K-beauty eyeshadow blush dupes shorts 명품 섀도우 블러셔 저렴이",
+    "🌿 스킨케어 & 프라이머 (럭셔리 스킨케어·베이스 듀프)": "K-beauty skincare primer dupes shorts 올리브영 명품 저렴이"
 }
-
 selected_cat = st.selectbox("관심 있는 화장품 카테고리를 선택하세요:", list(category_map.keys()))
 
 if st.button("🔍 듀프 숏폼 영상 불러오기", type="primary"):
