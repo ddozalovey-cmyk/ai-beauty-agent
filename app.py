@@ -420,7 +420,7 @@ st.caption(t["disclaimer"])
 # ==========================================
 st.markdown("---")
 st.subheader("💎 하이엔드 럭셔리 vs K-뷰티 가성비 듀프(Dupe) 숏폼")
-st.caption("백화점 하이엔드 화장품과 발색·제형이 유사한 인기 한국 화장품 비교 쇼츠를 자유롭게 탐색해 보세요.")
+st.caption("백화점 하이엔드 화장품과 발색·제형이 유사한 인기 한국 화장품 비교 쇼츠를 자유롭게 탐색해 보세요.사진 업로드 없이 바로 인기 K-뷰티 듀프 숏폼을 검색해 보세요! 내 얼굴 비율에 딱 맞는 화장법이 궁금하다면 왼쪽 메뉴에서 정밀 진단을 시작할 수 있습니다")
 
 @st.cache_data(ttl=86400)
 def search_kbeauty_dupes(api_key, query, max_results=4):
