@@ -416,10 +416,10 @@ if user_prompt := st.chat_input(t["chat_placeholder"]):
 st.write("---")
 st.caption(t["disclaimer"])
 # ==========================================
-# [개선 기능] K-뷰티 명품 듀프(Dupe) 무제한 숏폼 추천 섹션
+# [다국어 지원 최종 완성] K-뷰티 명품 듀프(Dupe) 무제한 숏폼 추천 섹션
 # ==========================================
 st.markdown("---")
-# 기존 app.py 상단의 언어 선택 변수명(예: lang)과 연결
+
 is_en = (t.get("profile_header") == "1. User Profile")
 
 if is_en:
@@ -431,13 +431,16 @@ if is_en:
     )
 else:
     st.subheader("💎 하이엔드 럭셔리 vs K-뷰티 가성비 듀프(Dupe) 숏폼")
-    st.caption("백화점 하이엔드 화장품과 발색·제형이 유사한 인기 한국 화장품 비교 쇼츠를 자유롭게 탐색해 보세요.사진 업로드 없이 바로 인기 K-뷰티 듀프 숏폼을 검색해 보세요! 내 얼굴 비율에 딱 맞는 화장법이 궁금하다면 왼쪽 메뉴에서 정밀 진단을 시작할 수 있습니다")
+    st.caption(
+        "백화점 하이엔드 화장품과 발색·제형이 유사한 인기 한국 화장품 비교 쇼츠를 자유롭게 탐색해 보세요. "
+        "사진 업로드 없이 바로 인기 K-뷰티 듀프 숏폼을 검색해 보세요! "
+        "내 얼굴 비율에 딱 맞는 화장법이 궁금하다면 왼쪽 메뉴에서 정밀 진단을 시작할 수 있습니다."
+    )
 
 @st.cache_data(ttl=86400)
 def search_kbeauty_dupes(api_key, query, max_results=4):
     youtube = build("youtube", "v3", developerKey=api_key)
     
-    # 1차 시도: 60초 이하 쇼츠(Shorts) 우선 검색
     request = youtube.search().list(
         part="snippet",
         q=query,
@@ -449,7 +452,6 @@ def search_kbeauty_dupes(api_key, query, max_results=4):
     response = request.execute()
     items = response.get("items", [])
     
-    # 2차 방어(Fallback): 쇼츠 결과가 0개일 경우 길이 제한 없이 인기 비교 영상 검색
     if not items:
         fallback_request = youtube.search().list(
             part="snippet",
@@ -463,48 +465,79 @@ def search_kbeauty_dupes(api_key, query, max_results=4):
         
     return items
 
-# 1. 확장된 기본 추천 카테고리 (상표권 리스크 없는 안전한 표현)
-category_map = {
-    "✍️ 직접 원하는 제품/스타일 입력하기": "",
-    "💋 립 메이크업 (백화점 하이엔드 립 듀프)": "K-beauty lip dupes shorts 립 명품 저렴이",
-    "✨ 쿠션 & 파운데이션 (하이엔드 베이스 듀프)": "K-beauty cushion foundation dupes 쿠션 파데 명품 저렴이",
-    "🎨 아이섀도우 & 블러셔 (프리미엄 색조 듀프)": "K-beauty blush eyeshadow dupes 블러셔 섀도우 명품 저렴이",
-    "👁️ 아이라이너 & 마스카라 (지속력 갑 K-뷰티 듀프)": "K-beauty eyeliner mascara dupes 아이라이너 마스카라 추천",
-    "🪄 컨실러 & 쉐딩 (입체 윤곽 K-뷰티 듀프)": "K-beauty contour concealer dupes 컨실러 쉐딩 명품 저렴이",
-    "🌿 스킨케어 & 프라이머 (럭셔리 스킨케어 듀프)": "K-beauty skincare primer dupes 올리브영 명품 저렴이"
-}
+# 언어별 카테고리 및 라벨 분기
+if is_en:
+    category_map = {
+        "✍️ Type your own product/style keyword": "",
+        "💋 Lip Makeup (High-End Luxury Lip Dupes)": "K-beauty lip dupes shorts affordable Korean lip tint",
+        "✨ Cushion & Foundation (Luxury Base Dupes)": "K-beauty cushion foundation dupes shorts Korean base makeup",
+        "🎨 Eyeshadow & Blush (Premium Color Dupes)": "K-beauty blush eyeshadow dupes shorts Korean makeup",
+        "👁️ Eyeliner & Mascara (Long-Lasting K-Beauty Dupes)": "K-beauty eyeliner mascara dupes shorts",
+        "🪄 Concealer & Contour (Sculpting K-Beauty Dupes)": "K-beauty contour concealer dupes shorts",
+        "🌿 Skincare & Primer (Luxury Skincare Dupes)": "K-beauty skincare primer dupes shorts Olive Young bestseller"
+    }
+    label_cat = "1️⃣ Select Category:"
+    label_custom = "2️⃣ Additional Keywords (Optional):"
+    placeholder_txt = "e.g., cool tone lip, dewy cushion, glass skin..."
+    btn_txt = "🔍 Find Custom Dupe Videos"
+    spinner_txt = "Curating trending K-Beauty dupe videos..."
+    warn_txt = "No matching videos found. Try simpler keywords (e.g., lip tint, cushion)."
+    creator_txt = "📺 Creator:"
+    disclaimer_txt = (
+        "ℹ️ **Disclaimer:** All video copyrights belong to their respective YouTube creators and are officially embedded via the Google YouTube Data API. "
+        "This content is curated solely for beauty trend comparison and is not affiliated with or intended to disparage any brand."
+    )
+    err_txt = "Daily free API quota reached or a temporary error occurred. Please try again later."
+else:
+    category_map = {
+        "✍️ 직접 원하는 제품/스타일 입력하기": "",
+        "💋 립 메이크업 (백화점 하이엔드 립 듀프)": "K-beauty lip dupes shorts 립 명품 저렴이",
+        "✨ 쿠션 & 파운데이션 (하이엔드 베이스 듀프)": "K-beauty cushion foundation dupes 쿠션 파데 명품 저렴이",
+        "🎨 아이섀도우 & 블러셔 (프리미엄 색조 듀프)": "K-beauty blush eyeshadow dupes 블러셔 섀도우 명품 저렴이",
+        "👁️ 아이라이너 & 마스카라 (지속력 갑 K-뷰티 듀프)": "K-beauty eyeliner mascara dupes 아이라이너 마스카라 추천",
+        "🪄 컨실러 & 쉐딩 (입체 윤곽 K-뷰티 듀프)": "K-beauty contour concealer dupes 컨실러 쉐딩 명품 저렴이",
+        "🌿 스킨케어 & 프라이머 (럭셔리 스킨케어 듀프)": "K-beauty skincare primer dupes 올리브영 명품 저렴이"
+    }
+    label_cat = "1️⃣ 카테고리 선택:"
+    label_custom = "2️⃣ 추가 세부 키워드 (선택 사항):"
+    placeholder_txt = "예: 쿨톤 립, 수부지 쿠션, 글로우 블러셔..."
+    btn_txt = "🔍 맞춤 듀프 영상 불러오기"
+    spinner_txt = "인기 K-뷰티 듀프 영상을 큐레이션 중입니다..."
+    warn_txt = "일치하는 영상이 없습니다. 조금 더 간단한 단어(예: 립틴트, 쿠션)로 다시 검색해 보세요."
+    creator_txt = "📺 크리에이터:"
+    disclaimer_txt = (
+        "ℹ️ **안내:** 모든 동영상의 저작권은 해당 YouTube 크리에이터에게 있으며, "
+        "Google YouTube Data API를 통해 공식 임베드 제공됩니다. "
+        "특정 브랜드와의 공식 제휴나 비방 목적이 아닌 뷰티 트렌드 큐레이션 정보입니다."
+    )
+    err_txt = "일일 무료 API 할당량이 소진되었거나 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
 
 col_cat, col_custom = st.columns([1, 1])
 
 with col_cat:
-    selected_cat = st.selectbox("1️⃣ 카테고리 선택:", list(category_map.keys()))
+    selected_cat = st.selectbox(label_cat, list(category_map.keys()))
 
 with col_custom:
-    custom_keyword = st.text_input(
-        "2️⃣ 추가 세부 키워드 (선택 사항):",
-        placeholder="예: 쿨톤 립, 수부지 쿠션, 글로우 블러셔..."
-    )
+    custom_keyword = st.text_input(label_custom, placeholder=placeholder_txt)
 
-if st.button("🔍 맞춤 듀프 영상 불러오기", type="primary"):
+if st.button(btn_txt, type="primary"):
     try:
         api_key = st.secrets["YOUTUBE_API_KEY"]
         base_query = category_map[selected_cat]
         
-        # 사용자 직접 입력과 카테고리 조합
         if custom_keyword.strip():
             if base_query:
                 search_query = f"{custom_keyword.strip()} {base_query}"
             else:
-                search_query = f"{custom_keyword.strip()} K-beauty dupes 명품 저렴이"
+                search_query = f"{custom_keyword.strip()} K-beauty dupes"
         else:
-            # 직접 입력을 선택하고 아무것도 안 적었을 경우 기본 인기 쿼리 적용
-            search_query = base_query if base_query else "K-beauty luxury dupes shorts 명품 저렴이 화장품"
+            search_query = base_query if base_query else "K-beauty luxury dupes shorts"
 
-        with st.spinner(f"'{custom_keyword if custom_keyword.strip() else selected_cat}' 관련 인기 K-뷰티 영상을 찾는 중..."):
+        with st.spinner(spinner_txt):
             videos = search_kbeauty_dupes(api_key, search_query, max_results=4)
 
         if not videos:
-            st.warning("일치하는 영상이 없습니다. 조금 더 간단한 단어(예: 립틴트, 쿠션)로 다시 검색해 보세요.")
+            st.warning(warn_txt)
         else:
             cols = st.columns(2)
             for idx, item in enumerate(videos):
@@ -516,14 +549,10 @@ if st.button("🔍 맞춤 듀프 영상 불러오기", type="primary"):
                 with cols[idx % 2]:
                     st.video(video_url)
                     st.markdown(f"**{title}**")
-                    st.caption(f"📺 크리에이터: {channel}")
+                    st.caption(f"{creator_txt} {channel}")
                     st.markdown("---")
 
-            st.info(
-                "ℹ️ **안내:** 모든 동영상의 저작권은 해당 YouTube 크리에이터에게 있으며, "
-                "Google YouTube Data API를 통해 공식 임베드 제공됩니다. "
-                "특정 브랜드와의 공식 제휴나 비방 목적이 아닌 뷰티 트렌드 큐레이션 정보입니다."
-            )
+            st.info(disclaimer_txt)
 
     except Exception as e:
-        st.error("일일 무료 API 할당량이 소진되었거나 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
+        st.error(err_txt)
