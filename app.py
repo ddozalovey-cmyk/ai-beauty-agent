@@ -416,7 +416,7 @@ if user_prompt := st.chat_input(t["chat_placeholder"]):
 st.write("---")
 st.caption(t["disclaimer"])
 # ==========================================
-# [다국어 지원 최종 완성] K-뷰티 명품 듀프(Dupe) 무제한 숏폼 추천 섹션
+# [최종 완성] 한국 크리에이터 우선 K-뷰티 명품 듀프(Dupe) 숏폼 섹션
 # ==========================================
 st.markdown("---")
 
@@ -425,8 +425,8 @@ is_en = (t.get("profile_header") == "1. User Profile")
 if is_en:
     st.subheader("💎 High-End Luxury vs. K-Beauty Affordable Dupes (Shorts)")
     st.caption(
-        "Explore popular K-Beauty comparison Shorts featuring shades and textures similar to high-end luxury cosmetics. "
-        "Search trending K-Beauty dupe Shorts right away—no photo upload required! "
+        "Explore popular Korean creator comparison Shorts featuring shades and textures similar to high-end luxury cosmetics. "
+        "Search trending K-Beauty dupe Shorts right away—no photo upload required! (Tip: Turn on YouTube 'CC' for English subtitles.) "
         "Want makeup tips tailored to your exact facial proportions? Start your precision diagnosis in the left sidebar."
     )
 else:
@@ -441,22 +441,26 @@ else:
 def search_kbeauty_dupes(api_key, query, max_results=4):
     youtube = build("youtube", "v3", developerKey=api_key)
     
+    # 1차 시도: 한국 지역(KR) 기준 60초 이하 쇼츠 우선 검색
     request = youtube.search().list(
         part="snippet",
         q=query,
         type="video",
         videoDuration="short",
+        regionCode="KR",
         order="relevance",
         maxResults=max_results
     )
     response = request.execute()
     items = response.get("items", [])
     
+    # 2차 방어(Fallback): 쇼츠 결과가 부족할 경우 길이 제한 없이 한국 인기 비교 영상 검색
     if not items:
         fallback_request = youtube.search().list(
             part="snippet",
             q=query,
             type="video",
+            regionCode="KR",
             order="relevance",
             maxResults=max_results
         )
@@ -465,22 +469,22 @@ def search_kbeauty_dupes(api_key, query, max_results=4):
         
     return items
 
-# 언어별 카테고리 및 라벨 분기
+# 한국 크리에이터 영상이 최우선 검색되도록 한국어 핵심 키워드와 영문 키워드 결합
 if is_en:
     category_map = {
         "✍️ Type your own product/style keyword": "",
-        "💋 Lip Makeup (High-End Luxury Lip Dupes)": "K-beauty lip dupes shorts affordable Korean lip tint",
-        "✨ Cushion & Foundation (Luxury Base Dupes)": "K-beauty cushion foundation dupes shorts Korean base makeup",
-        "🎨 Eyeshadow & Blush (Premium Color Dupes)": "K-beauty blush eyeshadow dupes shorts Korean makeup",
-        "👁️ Eyeliner & Mascara (Long-Lasting K-Beauty Dupes)": "K-beauty eyeliner mascara dupes shorts",
-        "🪄 Concealer & Contour (Sculpting K-Beauty Dupes)": "K-beauty contour concealer dupes shorts",
-        "🌿 Skincare & Primer (Luxury Skincare Dupes)": "K-beauty skincare primer dupes shorts Olive Young bestseller"
+        "💋 Lip Makeup (High-End Luxury Lip Dupes)": "립 명품 저렴이 올리브영 K-beauty lip dupes",
+        "✨ Cushion & Foundation (Luxury Base Dupes)": "쿠션 파데 명품 저렴이 올리브영 K-beauty cushion dupes",
+        "🎨 Eyeshadow & Blush (Premium Color Dupes)": "블러셔 섀도우 명품 저렴이 올리브영 K-beauty blush dupes",
+        "👁️ Eyeliner & Mascara (Long-Lasting K-Beauty Dupes)": "아이라이너 마스카라 명품 저렴이 올리브영 추천",
+        "🪄 Concealer & Contour (Sculpting K-Beauty Dupes)": "컨실러 쉐딩 명품 저렴이 올리브영 추천",
+        "🌿 Skincare & Primer (Luxury Skincare Dupes)": "스킨케어 프라이머 명품 저렴이 올리브영 추천"
     }
     label_cat = "1️⃣ Select Category:"
     label_custom = "2️⃣ Additional Keywords (Optional):"
     placeholder_txt = "e.g., cool tone lip, dewy cushion, glass skin..."
     btn_txt = "🔍 Find Custom Dupe Videos"
-    spinner_txt = "Curating trending K-Beauty dupe videos..."
+    spinner_txt = "Curating trending Korean creator dupe videos..."
     warn_txt = "No matching videos found. Try simpler keywords (e.g., lip tint, cushion)."
     creator_txt = "📺 Creator:"
     disclaimer_txt = (
@@ -491,18 +495,18 @@ if is_en:
 else:
     category_map = {
         "✍️ 직접 원하는 제품/스타일 입력하기": "",
-        "💋 립 메이크업 (백화점 하이엔드 립 듀프)": "K-beauty lip dupes shorts 립 명품 저렴이",
-        "✨ 쿠션 & 파운데이션 (하이엔드 베이스 듀프)": "K-beauty cushion foundation dupes 쿠션 파데 명품 저렴이",
-        "🎨 아이섀도우 & 블러셔 (프리미엄 색조 듀프)": "K-beauty blush eyeshadow dupes 블러셔 섀도우 명품 저렴이",
-        "👁️ 아이라이너 & 마스카라 (지속력 갑 K-뷰티 듀프)": "K-beauty eyeliner mascara dupes 아이라이너 마스카라 추천",
-        "🪄 컨실러 & 쉐딩 (입체 윤곽 K-뷰티 듀프)": "K-beauty contour concealer dupes 컨실러 쉐딩 명품 저렴이",
-        "🌿 스킨케어 & 프라이머 (럭셔리 스킨케어 듀프)": "K-beauty skincare primer dupes 올리브영 명품 저렴이"
+        "💋 립 메이크업 (백화점 하이엔드 립 듀프)": "립 명품 저렴이 올리브영 K-beauty lip dupes",
+        "✨ 쿠션 & 파운데이션 (하이엔드 베이스 듀프)": "쿠션 파데 명품 저렴이 올리브영 K-beauty cushion dupes",
+        "🎨 아이섀도우 & 블러셔 (프리미엄 색조 듀프)": "블러셔 섀도우 명품 저렴이 올리브영 K-beauty blush dupes",
+        "👁️ 아이라이너 & 마스카라 (지속력 갑 K-뷰티 듀프)": "아이라이너 마스카라 명품 저렴이 올리브영 추천",
+        "🪄 컨실러 & 쉐딩 (입체 윤곽 K-뷰티 듀프)": "컨실러 쉐딩 명품 저렴이 올리브영 추천",
+        "🌿 스킨케어 & 프라이머 (럭셔리 스킨케어 듀프)": "스킨케어 프라이머 명품 저렴이 올리브영 추천"
     }
     label_cat = "1️⃣ 카테고리 선택:"
     label_custom = "2️⃣ 추가 세부 키워드 (선택 사항):"
     placeholder_txt = "예: 쿨톤 립, 수부지 쿠션, 글로우 블러셔..."
     btn_txt = "🔍 맞춤 듀프 영상 불러오기"
-    spinner_txt = "인기 K-뷰티 듀프 영상을 큐레이션 중입니다..."
+    spinner_txt = "인기 한국 크리에이터의 K-뷰티 듀프 영상을 찾는 중입니다..."
     warn_txt = "일치하는 영상이 없습니다. 조금 더 간단한 단어(예: 립틴트, 쿠션)로 다시 검색해 보세요."
     creator_txt = "📺 크리에이터:"
     disclaimer_txt = (
@@ -529,9 +533,9 @@ if st.button(btn_txt, type="primary"):
             if base_query:
                 search_query = f"{custom_keyword.strip()} {base_query}"
             else:
-                search_query = f"{custom_keyword.strip()} K-beauty dupes"
+                search_query = f"{custom_keyword.strip()} 명품 저렴이 올리브영 K-beauty dupes"
         else:
-            search_query = base_query if base_query else "K-beauty luxury dupes shorts"
+            search_query = base_query if base_query else "명품 저렴이 올리브영 추천 K-beauty dupes"
 
         with st.spinner(spinner_txt):
             videos = search_kbeauty_dupes(api_key, search_query, max_results=4)
